@@ -1,0 +1,17 @@
+[project]
+name = "aiagent-coding-assistant"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "kaustubh10122024", email = "kaustubh10122024@gmail.com" }
+]
+requires-python = ">=3.12"
+dependencies = []
+
+[project.scripts]
+aiagent-coding-assistant = "aiagent_coding_assistant:main"
+
+[build-system]
+requires = ["uv_build>=0.13.5,<0.14.0"]
+build-backend = "uv_build"
