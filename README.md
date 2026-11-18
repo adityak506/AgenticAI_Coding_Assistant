@@ -11,6 +11,7 @@ An autonomous, multi-agent coding assistant built with **LangGraph**, **LangChai
 - **Automated Code Review**: Reviews the generated codebase against user specifications for syntax errors, logic bugs, and missing features.
 - **Self-Healing Loop**: Automatically patches and rewrites defective files based on specific reviewer feedback (up to 2 retries).
 - **Stateful Graph Architecture**: Powered by LangGraph's cyclical state graph for transparent, robust execution flow.
+- **Full Observability (LangSmith)**: Deep tracing of graph states, LLM prompts/responses, file I/O operations, token usage, and latency.
 
 ---
 
@@ -47,15 +48,16 @@ flowchart TD
 ```text
 AIAgent-coding_assistant/
 |-- .env.example                       # Example environment variable configuration
-|-- main.py                            # Interactive CLI entry point
+|-- main.py                            # Interactive CLI entry point with LangSmith tagging
 |-- pyproject.toml                     # Project packaging and metadata
-|-- requirements.txt                   # Core Python dependencies
+|-- requirements.txt                   # Core Python dependencies (LangGraph, LangChain, LangSmith)
 |-- src/
 |   \-- aiagent_coding_assistant/
 |       |-- __init__.py                # Package initialization
 |       |-- graph.py                   # LangGraph state machine & edge definitions
-|       |-- nodes.py                   # Node logic (planner, coder, reviewer, fixer)
+|       |-- nodes.py                   # Node logic & @traceable file operations
 |       \-- state.py                   # Pydantic schemas (Plan, Step, Review) & State TypedDict
+|-- implementationplan.md              # LangSmith implementation roadmap
 \-- README.md                          # Documentation
 ```
 
@@ -67,6 +69,7 @@ AIAgent-coding_assistant/
 
 - **Python 3.12+**
 - An **OpenAI API Key** (with access to `gpt-4o`)
+- A **LangSmith API Key** (optional, for observability and trace visualization)
 
 ### 1. Clone & Navigate to Repository
 
@@ -100,7 +103,7 @@ pip install -r requirements.txt
 
 ### 4. Configure Environment Variables
 
-Copy `.env.example` to `.env` and set your OpenAI API key:
+Copy `.env.example` to `.env`:
 
 **On Windows (PowerShell):**
 ```powershell
@@ -112,9 +115,15 @@ Copy-Item .env.example .env
 cp .env.example .env
 ```
 
-Open `.env` and update with your credentials:
+Open `.env` and set your OpenAI credentials:
 ```env
 OPENAI_API_KEY=your_actual_openai_api_key_here
+
+# LangSmith Observability Configuration (Optional)
+LANGSMITH_TRACING=false
+LANGSMITH_ENDPOINT="https://api.smith.langchain.com"
+LANGSMITH_API_KEY=lsv2_pt_your_api_key_here
+LANGSMITH_PROJECT="aiagent-coding-assistant"
 ```
 
 ---
@@ -142,6 +151,26 @@ The assistant will:
 2. Generate each file and write it to disk.
 3. Review all generated files.
 4. Automatically fix any issues if defects are detected (up to 2 retry attempts).
+
+---
+
+## 🔍 Observability with LangSmith
+
+LangSmith tracing is integrated into this project to provide deep visibility into the multi-agent graph:
+
+1. Sign up at [smith.langchain.com](https://smith.langchain.com/) and create an API key in **Settings → API Keys**.
+2. In `.env`, set:
+   ```env
+   LANGSMITH_TRACING=true
+   LANGSMITH_API_KEY="lsv2_pt_..."
+   LANGSMITH_PROJECT="aiagent-coding-assistant"
+   ```
+3. Run `python main.py`.
+4. Open your dashboard at [smith.langchain.com](https://smith.langchain.com/) to view:
+   - Complete execution trees of the `planner`, `coder`, `reviewer`, and `fixer` nodes.
+   - Child tool spans for `write_file_to_disk` and `read_codebase`.
+   - Exact prompts, system messages, and structured JSON outputs (`Plan`, `ReviewList`).
+   - Token consumption, latency, and estimated cost per node.
 
 ---
 
